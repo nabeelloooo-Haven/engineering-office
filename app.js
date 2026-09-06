@@ -1,29 +1,24 @@
 const $=id=>document.getElementById(id);
 $('form').addEventListener('submit',e=>{
- e.preventDefault();
- const land=+$('land').value,aps=+$('apartments').value,beds=+$('bedrooms').value,baths=+$('baths').value,kitchens=+$('kitchens').value,living=+$('living').value,maid=$('maid').value==='yes',notes=$('notes').value.trim();
- const gross=land*.65, common=Math.min(.08+(aps-1)*.025,.16), net=gross*(1-common), unit=net/aps;
- $('summary').innerHTML=`<div class="metric">مساحة الأرض<b>${land.toFixed(0)} م²</b></div><div class="metric">65% مساحة بناء<b>${gross.toFixed(1)} م²</b></div><div class="metric">الشقق بالدور<b>${aps}</b></div><div class="metric">مساحة الشقة تقريباً<b>${unit.toFixed(1)} م²</b></div>`;
- const types=[['اقتراح الراحة','غرف وصالات أوسع'],['اقتراح متوازن','توازن بين الخصوصية والاستغلال'],['اقتراح الاستغلال','استفادة أكبر من المساحة المتاحة']];
- $('proposals').innerHTML=types.map((p,i)=>`<article class="proposal"><h3>${i+1}. ${p[0]}</h3><p>${p[1]}</p><div class="plan-title">مخطط معماري تصوري للدور</div>${planSvg(aps,beds,baths,kitchens,living,maid,i,unit)}<div class="plan-legend"><span>▣ مصعد</span><span>▤ درج</span><span>↔ ممر توزيع</span><span>▱ مدخل مستقل</span></div><small>${beds} نوم • ${baths} حمام • ${kitchens} مطبخ • ${living} صالة${maid?' • غرفة شغالة':''} • المساحة التقريبية للشقة ${unit.toFixed(1)} م²</small></article>`).join('');
- const msg=`مرحباً، أريد تطوير تصميم مبدئي لبيتي.%0Aمساحة الأرض: ${land} م²%0Aمساحة البناء 65%: ${gross.toFixed(1)} م²%0Aعدد الشقق بالدور: ${aps}%0Aمساحة الشقة التقريبية: ${unit.toFixed(1)} م²%0Aالغرف: ${beds}، الحمامات: ${baths}، المطابخ: ${kitchens}، الصالات: ${living}%0Aغرفة شغالة: ${maid?'نعم':'لا'}${notes?`%0Aملاحظات: ${encodeURIComponent(notes)}`:''}`;
- $('wa').href='https://wa.me/966542277575?text='+msg;$('results').classList.remove('hidden');$('results').scrollIntoView({behavior:'smooth'});
+  e.preventDefault();
+  const land=+$('land').value,aps=+$('apartments').value,beds=+$('bedrooms').value,baths=+$('baths').value,kitchens=+$('kitchens').value,living=+$('living').value,maid=$('maid').value==='yes',notes=$('notes').value.trim();
+  const gross=land*.65;
+  const common=Math.min(.08+(aps-1)*.025,.16);
+  const net=gross*(1-common);
+  const unit=net/aps;
+  $('summary').innerHTML=`<div class="metric">مساحة الأرض<b>${land.toFixed(0)} م²</b></div><div class="metric">65% مساحة بناء<b>${gross.toFixed(1)} م²</b></div><div class="metric">الشقق بالدور<b>${aps}</b></div><div class="metric">مساحة الشقة تقريباً<b>${unit.toFixed(1)} م²</b></div>`;
+  const types=[
+    ['اقتراح الراحة','مساحات غرف وصالات أوسع',.42,.27,.12,.12],
+    ['اقتراح متوازن','توازن بين الخصوصية والاستغلال',.38,.25,.14,.13],
+    ['اقتراح الاستغلال','استفادة أكبر من المساحة المتاحة',.35,.23,.15,.14]
+  ];
+  $('proposals').innerHTML=types.map((p,i)=>{
+    const service=1-p[2]-p[3]-p[4]-p[5];
+    return `<article class="proposal"><h3>${i+1}. ${p[0]}</h3><p>${p[1]}</p>${row('غرف النوم',p[2],unit)}${row('الصالات',p[3],unit)}${row('المطبخ',p[4],unit)}${row('الحمامات',p[5],unit)}${row('ممرات وخدمات',service,unit)}<small>${beds} نوم • ${baths} حمام • ${kitchens} مطبخ • ${living} صالة${maid?' • غرفة شغالة':''}</small></article>`;
+  }).join('');
+  const msg=`مرحباً، أريد تطوير تصميم مبدئي لبيتي.%0Aمساحة الأرض: ${land} م²%0Aمساحة البناء المحسوبة 65%: ${gross.toFixed(1)} م²%0Aعدد الشقق بالدور: ${aps}%0Aمساحة الشقة التقريبية: ${unit.toFixed(1)} م²%0Aالغرف: ${beds}، الحمامات: ${baths}، المطابخ: ${kitchens}، الصالات: ${living}%0Aغرفة شغالة: ${maid?'نعم':'لا'}${notes?`%0Aملاحظات: ${encodeURIComponent(notes)}`:''}%0Aأرغب بالتواصل لتطوير أحد الاقتراحات إلى مخطط هندسي.`;
+  $('wa').href='https://wa.me/966542277575?text='+msg;
+  $('results').classList.remove('hidden');
+  $('results').scrollIntoView({behavior:'smooth'});
 });
-function planSvg(aps,beds,baths,kitchens,living,maid,v,unit){
- const W=900,H=650,cx=360,cy=235,cw=180,ch=180;
- let s=`<svg class="floorplan" viewBox="0 0 ${W} ${H}"><defs><pattern id="grid${v}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" class="gridline"/></pattern></defs><rect width="900" height="650" class="plan-bg"/><rect width="900" height="650" fill="url(#grid${v})"/><rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" class="core"/><rect x="380" y="255" width="60" height="75" class="lift"/><text x="410" y="297" class="label small">مصعد</text><rect x="455" y="255" width="65" height="135" class="stairs"/>${stairs(460,265)}<text x="487" y="407" class="label small">درج</text><rect x="280" y="205" width="340" height="35" class="corridor"/><rect x="280" y="415" width="340" height="35" class="corridor"/><text x="450" y="229" class="label tiny">ممر توزيع الشقق</text>`;
- unitPositions(aps).forEach((b,i)=>s+=drawUnit(b,i+1,beds,baths,kitchens,living,maid,v,unit));
- return s+`<text x="450" y="632" class="dimtext">مخطط تصوري مبدئي — الأبعاد تتغير بعد إدخال أبعاد الأرض والارتدادات الفعلية</text></svg>`;
-}
-function unitPositions(n){if(n===1)return[{x:60,y:55,w:780,h:520,door:'top'}];if(n===2)return[{x:35,y:45,w:310,h:550,door:'right'},{x:555,y:45,w:310,h:550,door:'left'}];if(n===3)return[{x:35,y:35,w:300,h:270,door:'right'},{x:565,y:35,w:300,h:270,door:'left'},{x:300,y:465,w:300,h:150,door:'top'}];return[{x:30,y:30,w:305,h:270,door:'right'},{x:565,y:30,w:305,h:270,door:'left'},{x:30,y:350,w:305,h:270,door:'right'},{x:565,y:350,w:305,h:270,door:'left'}]}
-function drawUnit(b,n,beds,baths,kitchens,living,maid,v,unit){
- let names=[];for(let i=0;i<living;i++)names.push(i?'مجلس / صالة':'صالة معيشة');for(let i=0;i<beds;i++)names.push(i?'غرفة نوم':'غرفة رئيسية');for(let i=0;i<kitchens;i++)names.push('مطبخ');for(let i=0;i<baths;i++)names.push('حمام');if(maid)names.push('غرفة شغالة');
- const max=Math.min(names.length,10),cols=b.w>500?3:2,rows=Math.ceil(max/cols),head=34,rw=(b.w-12)/cols,rh=(b.h-head-12)/rows;
- let g=`<g><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" class="apt"/><text x="${b.x+b.w/2}" y="${b.y+23}" class="apt-title">شقة ${n} — ${unit.toFixed(0)} م² تقريباً</text>`;
- names.slice(0,max).forEach((name,i)=>{const x=b.x+6+(i%cols)*rw,y=b.y+head+Math.floor(i/cols)*rh,w=rw-5,h=rh-5,area=Math.max(4,unit*(name.includes('صالة')?.18:name.includes('رئيسية')?.13:name.includes('نوم')?.11:name==='مطبخ'?.09:name==='حمام'?.045:.07));g+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room r${(i+v)%4}"/><text x="${x+w/2}" y="${y+h/2-4}" class="room-label">${name}</text><text x="${x+w/2}" y="${y+h/2+12}" class="area-label">≈ ${area.toFixed(1)} م²</text>${furniture(name,x,y,w,h)}${windowLine(x,y,w,h,i)}${doorArc(x,y,w,h)}`});
- const dx=b.door==='right'?b.x+b.w:b.x,dy=b.y+b.h/2;g+=`<path d="M${dx} ${dy-18}v36" class="entry"/><text x="${b.door==='right'?dx-38:dx+38}" y="${dy-24}" class="entry-label">مدخل</text></g>`;return g;
-}
-function furniture(n,x,y,w,h){if(n.includes('نوم')||n.includes('رئيسية')||n.includes('شغالة'))return `<rect x="${x+w*.3}" y="${y+h*.58}" width="${w*.4}" height="${h*.24}" rx="3" class="furn"/><line x1="${x+w*.5}" y1="${y+h*.58}" x2="${x+w*.5}" y2="${y+h*.82}" class="furnline"/>`;if(n.includes('صالة')||n.includes('مجلس'))return `<path d="M${x+w*.2} ${y+h*.72}h${w*.6}M${x+w*.2} ${y+h*.72}v${h*.12}M${x+w*.8} ${y+h*.72}v${h*.12}" class="furnline"/>`;if(n==='مطبخ')return `<path d="M${x+w*.12} ${y+h*.65}h${w*.72}v${h*.14}" class="furnline"/>`;if(n==='حمام')return `<ellipse cx="${x+w*.5}" cy="${y+h*.72}" rx="8" ry="12" class="furn"/>`;return ''}
-function windowLine(x,y,w,h,i){return i%2?`<line x1="${x+w*.3}" y1="${y}" x2="${x+w*.7}" y2="${y}" class="window"/>`:`<line x1="${x}" y1="${y+h*.3}" x2="${x}" y2="${y+h*.7}" class="window"/>`}
-function doorArc(x,y,w,h){return `<path d="M${x+w-18} ${y+h}v-18a18 18 0 0 0-18 18" class="doorarc"/>`}
-function stairs(x,y){let q='';for(let i=0;i<6;i++)q+=`<line x1="${x}" y1="${y+i*18}" x2="${x+55}" y2="${y+i*18}" class="stairline"/>`;return q}
+function row(n,r,u){return `<b>${n}: ${(u*r).toFixed(1)} م²</b><div class="bar"><i style="width:${r*100}%"></i></div>`}
